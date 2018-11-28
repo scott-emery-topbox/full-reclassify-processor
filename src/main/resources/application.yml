@@ -1,0 +1,136 @@
+##################################################################################
+# Application.yml
+# 
+# Application configuration file:
+# - properties are broken out by environment (spring profile i.e. spring.profiles)
+# - the first section includes properties common across all envionments
+#
+# broker.host - fully qualified host for the workflow broker (ex. http://localhost:8080/)
+# broker.registerProcessorPath - relative URI for the registerProcessor endpoint
+# processor.processorName - automatically expands to use the value from maven pom
+# processor.processorVersion - automatically expands to use the value from maven pom
+##################################################################################
+spring:
+  application: processor
+camel:
+  springboot:
+    main-run-controller: true
+    jmxEnabled: false
+    allowUseOriginalMessage: true
+    loadTypeConverters: false
+    messageHistory: false
+    
+processor:
+  processorName: "@project.artifactId@"
+  processorVersion: "@project.version@"
+
+aws_s3:
+  maxConnections: 500
+  socketSendBufferSizeHint: 33554432
+  socketReceiveBufferSizeHint: 33554432
+  cacheResponseMetadata: false
+  tcpKeepAlive: true
+  useExpectContinue: false
+
+  
+caching:
+  specs:
+    agents:
+      timeoutMinutes: 300
+      maxItems: 50000
+    clientEngagements:
+      timeoutMinutes: 15
+      maxItems: 100
+    campaigns:
+      timeoutMinutes: 300
+      maxItems: 500
+    clientDataProperties:
+      timeoutMinutes: 300
+      maxItems: 5000
+    clients:
+      timeoutMinutes: 15
+      maxItems: 100
+    elasticSearchClusterConfigurations:
+      timeoutMinutes: 15
+      maxItems: 100
+---
+##################################################################################
+# DEV
+##################################################################################
+spring:
+  profiles: dev
+      
+##################################################################################
+# BrokerClientProperties
+# 
+# broker.registerProcessorUri 
+# - the fully qualified URI to the registerProcessor endpoint (required)
+###################################################################################
+broker:
+  registerProcessorUri: "http://localhost:8082/caravan/registerProcessor/"
+
+##################################################################################
+# ProcessorProperties
+###################################################################################
+analytics:
+    uri: "http://10.0.5.239:8080/taxonomies"
+    
+    
+---
+##################################################################################
+# TEST
+##################################################################################
+spring:
+  profiles: test
+  
+##################################################################################
+# BrokerClientProperties
+# 
+# broker.registerProcessorUri 
+# - the fully qualified URI to the registerProcessor endpoint (required)
+###################################################################################
+broker:
+  registerProcessorUri:  "http://testing-broker.topbox.io/caravan/registerProcessor/"
+  
+processor:
+  pollIntervalSeconds: 1
+  pollIntervalBackoffMultiplier: 1
+     
+concurrency:
+  processCorePoolSize: 10
+  processMaxPoolSize: 10
+  processQueueCapacity: 400
+  s3FetchCorePoolSize: 20
+  s3FetchQueueCapacity: 400
+  bulkIndexBatchSize: 350
+
+rci:
+  production-database:
+    mongoUri: "{ssmParameter}/Test/Caravan/MongoUri/Production"
+    
+---
+##################################################################################
+# PROD
+##################################################################################
+spring:
+  profiles: prod
+  
+##################################################################################
+# BrokerClientProperties
+# 
+# broker.registerProcessorUri 
+# - the fully qualified URI to the registerProcessor endpoint (required)
+###################################################################################
+broker:
+  registerProcessorUri:  "http://broker.topbox.io:8082/caravan/registerProcessor/"
+  
+concurrency:
+  processCorePoolSize: 10
+  processMaxPoolSize: 10
+  processQueueCapacity: 300
+  s3FetchCorePoolSize: 10
+  s3FetchQueueCapacity: 1000
+
+rci:
+  production-database:
+    mongoUri: "{ssmParameter}/Prod/Caravan/MongoUri/Production"
